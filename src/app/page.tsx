@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 
 /* ── Chat messages for the phone mockup ── */
@@ -36,9 +36,14 @@ const chatMessages = [
 function PhoneMockup() {
   const [visibleMessages, setVisibleMessages] = useState(0)
   const [isTyping, setIsTyping] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (visibleMessages >= chatMessages.length) return
+    if (visibleMessages >= chatMessages.length) {
+      const replayTimer = setTimeout(() => setVisibleMessages(0), 5000)
+      return () => clearTimeout(replayTimer)
+    }
     const nextMsg = chatMessages[visibleMessages]
     const isAI = nextMsg.role === 'ai'
     if (isAI) {
@@ -54,6 +59,12 @@ function PhoneMockup() {
     }
   }, [visibleMessages])
 
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+    }
+  }, [visibleMessages, isTyping])
+
   const renderText = (text: string) => {
     return text.replace(
       /\*\*(.*?)\*\*/g,
@@ -65,12 +76,17 @@ function PhoneMockup() {
     <div className="relative">
       {/* Phone frame */}
       <div
-        className="w-[300px] bg-white rounded-[28px] overflow-hidden"
+        className="w-[350px] bg-white rounded-[32px] overflow-hidden transition-all duration-500"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
           border: '1.5px solid #E5E7EB',
-          boxShadow:
-            '0 4px 6px rgba(0,0,0,.03), 0 20px 50px rgba(0,0,0,.08)',
-          transform: 'perspective(1200px) rotateY(-2deg) rotateX(1deg)',
+          boxShadow: hovered
+            ? '0 8px 30px rgba(13,147,115,.15), 0 30px 60px rgba(0,0,0,.12)'
+            : '0 4px 6px rgba(0,0,0,.03), 0 20px 50px rgba(0,0,0,.08)',
+          transform: hovered
+            ? 'perspective(1200px) rotateY(0deg) rotateX(0deg) scale(1.02)'
+            : 'perspective(1200px) rotateY(-2deg) rotateX(1deg)',
         }}
       >
         {/* Notch */}
@@ -144,8 +160,9 @@ function PhoneMockup() {
 
         {/* Messages */}
         <div
-          className="p-5 flex flex-col gap-4 bg-white"
-          style={{ minHeight: '320px' }}
+          ref={scrollRef}
+          className="p-5 flex flex-col gap-4 bg-white overflow-y-auto"
+          style={{ minHeight: '220px', maxHeight: '300px', scrollbarWidth: 'none' }}
         >
           {chatMessages.slice(0, visibleMessages).map((msg, i) => (
             <div
@@ -191,7 +208,7 @@ function PhoneMockup() {
               </div>
               <div>
                 <div
-                  className={`max-w-[220px] px-4 py-3 text-[13px] leading-relaxed ${
+                  className={`max-w-[260px] px-4 py-3 text-[13px] leading-relaxed ${
                     msg.role === 'ai'
                       ? 'bg-gray-50 border border-gray-100 rounded-[18px] rounded-bl-[6px] text-gray-600'
                       : 'bg-brand-500 rounded-[18px] rounded-br-[6px] text-white font-medium'
@@ -264,7 +281,8 @@ function PhoneMockup() {
             (q, i) => (
               <span
                 key={i}
-                className="text-[11px] font-medium px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-500"
+                className="text-[11px] font-medium px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-500 cursor-pointer transition-all duration-200 hover:bg-brand-500 hover:text-white hover:border-brand-500 hover:shadow-sm"
+                style={{ animation: `bubbleIn 0.4s ease-out ${2 + i * 0.15}s both` }}
               >
                 {q}
               </span>
@@ -295,11 +313,11 @@ function PhoneMockup() {
 
       {/* Floating badges */}
       <div
-        className="absolute -left-8 top-20 bg-white rounded-2xl shadow-lg border border-gray-100 p-3 hidden lg:block"
-        style={{ animation: 'fadeInLeft 0.6s ease-out 2.5s both' }}
+        className="absolute -left-10 top-16 bg-white rounded-2xl shadow-lg border border-gray-100 p-3.5 hidden lg:block hover:scale-105 transition-transform duration-300 cursor-default"
+        style={{ animation: 'fadeInLeft 0.6s ease-out 2.5s both, floatBadge 3s ease-in-out 3.1s infinite' }}
       >
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 bg-green-50 rounded-full flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center flex-shrink-0">
             <svg
               width="18"
               height="18"
@@ -322,12 +340,28 @@ function PhoneMockup() {
       </div>
 
       <div
-        className="absolute -right-6 bottom-36 bg-white rounded-2xl shadow-lg border border-gray-100 p-3 hidden lg:block"
-        style={{ animation: 'fadeInRight 0.6s ease-out 4s both' }}
+        className="absolute -right-8 bottom-32 bg-white rounded-2xl shadow-lg border border-gray-100 p-3.5 hidden lg:block hover:scale-105 transition-transform duration-300 cursor-default"
+        style={{ animation: 'fadeInRight 0.6s ease-out 4s both, floatBadge 3s ease-in-out 4.6s infinite' }}
       >
         <p className="text-xs font-bold text-gray-900">Tax Savings Found</p>
         <p className="text-2xl font-extrabold text-brand-500">+$1,645</p>
         <p className="text-[10px] text-gray-500">For next year</p>
+      </div>
+
+      {/* Third floating badge */}
+      <div
+        className="absolute -left-4 bottom-20 bg-white rounded-2xl shadow-lg border border-gray-100 p-3.5 hidden lg:block hover:scale-105 transition-transform duration-300 cursor-default"
+        style={{ animation: 'fadeInLeft 0.6s ease-out 5.5s both, floatBadge 3.5s ease-in-out 6.1s infinite' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center flex-shrink-0 text-lg">
+            🎉
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-900">Refund Estimate</p>
+            <p className="text-lg font-extrabold text-brand-500">$3,847</p>
+          </div>
+        </div>
       </div>
 
       <style jsx>{`
@@ -380,6 +414,13 @@ function PhoneMockup() {
             opacity: 1;
             transform: translateX(0);
           }
+        }
+        @keyframes floatBadge {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .overflow-y-auto::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>
@@ -596,6 +637,8 @@ export default function Home() {
               >
                 Tax filing that actually{' '}
                 <span className="text-brand-500">saves you money.</span>
+                <br />
+                <span className="text-brand-500">Guaranteed.</span>
               </h1>
               <p className="text-gray-500 text-base leading-relaxed max-w-md md:max-w-lg">
                 No 50 screens of questions. No confusing forms. Just a
