@@ -162,7 +162,7 @@ function PhoneMockup() {
         <div
           ref={scrollRef}
           className="p-5 flex flex-col gap-4 bg-white overflow-y-auto"
-          style={{ minHeight: '220px', maxHeight: '300px', scrollbarWidth: 'none' }}
+          style={{ minHeight: '260px', maxHeight: '360px', scrollbarWidth: 'none' }}
         >
           {chatMessages.slice(0, visibleMessages).map((msg, i) => (
             <div
