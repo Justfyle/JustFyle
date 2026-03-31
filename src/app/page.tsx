@@ -61,7 +61,22 @@ function PhoneMockup() {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+      const el = scrollRef.current
+      const target = el.scrollHeight - el.clientHeight
+      const current = el.scrollTop
+      if (target <= current) return
+      const distance = target - current
+      const duration = Math.max(1200, distance * 8)
+      const start = performance.now()
+      const from = current
+      const step = (now: number) => {
+        const elapsed = now - start
+        const progress = Math.min(elapsed / duration, 1)
+        const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2
+        el.scrollTop = from + distance * ease
+        if (progress < 1) requestAnimationFrame(step)
+      }
+      requestAnimationFrame(step)
     }
   }, [visibleMessages, isTyping])
 
@@ -162,7 +177,7 @@ function PhoneMockup() {
         <div
           ref={scrollRef}
           className="p-5 flex flex-col gap-4 bg-white overflow-y-auto"
-          style={{ minHeight: '260px', maxHeight: '360px', scrollbarWidth: 'none' }}
+          style={{ height: '420px', scrollbarWidth: 'none' }}
         >
           {chatMessages.slice(0, visibleMessages).map((msg, i) => (
             <div
@@ -313,7 +328,7 @@ function PhoneMockup() {
 
       {/* Floating badges */}
       <div
-        className="absolute -left-10 top-16 bg-white rounded-2xl shadow-lg border border-gray-100 p-3.5 hidden lg:block hover:scale-105 transition-transform duration-300 cursor-default"
+        className="absolute -left-20 top-16 bg-white rounded-2xl shadow-lg border border-gray-100 p-3.5 hidden lg:block hover:scale-105 transition-transform duration-300 cursor-default"
         style={{ animation: 'fadeInLeft 0.6s ease-out 2.5s both, floatBadge 3s ease-in-out 3.1s infinite' }}
       >
         <div className="flex items-center gap-2.5">
@@ -340,7 +355,7 @@ function PhoneMockup() {
       </div>
 
       <div
-        className="absolute -right-8 bottom-32 bg-white rounded-2xl shadow-lg border border-gray-100 p-3.5 hidden lg:block hover:scale-105 transition-transform duration-300 cursor-default"
+        className="absolute -right-16 bottom-32 bg-white rounded-2xl shadow-lg border border-gray-100 p-3.5 hidden lg:block hover:scale-105 transition-transform duration-300 cursor-default"
         style={{ animation: 'fadeInRight 0.6s ease-out 4s both, floatBadge 3s ease-in-out 4.6s infinite' }}
       >
         <p className="text-xs font-bold text-gray-900">Tax Savings Found</p>
@@ -350,7 +365,7 @@ function PhoneMockup() {
 
       {/* Third floating badge */}
       <div
-        className="absolute -left-4 bottom-20 bg-white rounded-2xl shadow-lg border border-gray-100 p-3.5 hidden lg:block hover:scale-105 transition-transform duration-300 cursor-default"
+        className="absolute -left-16 bottom-20 bg-white rounded-2xl shadow-lg border border-gray-100 p-3.5 hidden lg:block hover:scale-105 transition-transform duration-300 cursor-default"
         style={{ animation: 'fadeInLeft 0.6s ease-out 5.5s both, floatBadge 3.5s ease-in-out 6.1s infinite' }}
       >
         <div className="flex items-center gap-2.5">
