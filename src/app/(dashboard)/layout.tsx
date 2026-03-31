@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { MessageSquare, FileText, PiggyBank, Settings, LogOut, TrendingUp, HelpCircle, Menu, X } from 'lucide-react'
 import OnboardingTutorial from '@/components/OnboardingTutorial'
+import SessionGuard from '@/components/SessionGuard'
 
 const navItems = [
   { href: '/chat', label: 'Tax Chat', icon: MessageSquare, description: 'Chat with your AI tax assistant', targetId: 'nav-tax-chat' },
