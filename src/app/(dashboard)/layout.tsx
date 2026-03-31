@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { MessageSquare, FileText, PiggyBank, Settings, LogOut, TrendingUp, HelpCircle } from 'lucide-react'
+import { MessageSquare, FileText, PiggyBank, Settings, LogOut, TrendingUp, HelpCircle, Menu, X } from 'lucide-react'
 import OnboardingTutorial from '@/components/OnboardingTutorial'
 
 const navItems = [
@@ -23,6 +23,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const supabase = createClient()
   const [showTutorial, setShowTutorial] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   useEffect(() => {
     try {
@@ -34,20 +35,55 @@ export default function DashboardLayout({
     } catch (e) {}
   }, [])
 
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setSidebarOpen(false)
+  }, [pathname])
+
+  // Close sidebar on escape key
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setSidebarOpen(false)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [])
+
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
   }
 
+  const currentPage = navItems.find((item) => item.href === pathname)
+
   return (
     <div className="min-h-screen flex bg-surface-100">
-      <aside className="w-72 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6 border-b border-gray-100">
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 flex flex-col
+        transform transition-transform duration-300 ease-in-out
+        lg:relative lg:translate-x-0
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <Link href="/chat" className="text-xl font-bold text-gray-900">
             Just<span className="text-brand-500">Fyle</span>.ai
           </Link>
-          <p className="text-xs text-gray-400 mt-1">AI-Powered Tax Filing</p>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -108,18 +144,41 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
-          <div />
-          <div className="flex items-center gap-6">
-            <div className="text-right" id="federal-refund-display">
-              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">Federal Refund</p>
-              <p className="text-lg font-bold text-gray-900">$0.00</p>
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {/* Top Header */}
+        <div className="bg-white border-b border-gray-200 px-3 sm:px-6 py-2 sm:py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Hamburger - mobile only */}
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors lg:hidden"
+              >
+                <Menu size={20} />
+              </button>
+              {/* Mobile: logo + page title */}
+              <div className="lg:hidden">
+                <p className="text-xs font-bold text-gray-900">Just<span className="text-brand-500">Fyle</span></p>
+                <p className="text-[10px] text-gray-400">{currentPage?.label || 'Dashboard'}</p>
+              </div>
             </div>
-            <div className="w-px h-8 bg-gray-200" />
-            <div className="text-right" id="state-refund-display">
-              <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">State Refund</p>
-              <p className="text-lg font-bold text-gray-900">$0.00</p>
+            {/* Refund displays - compact on mobile */}
+            <div className="flex items-center gap-2 sm:gap-6">
+              {/* Mobile: compact savings pill */}
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-brand-50 rounded-lg lg:hidden" id="mobile-savings">
+                <TrendingUp size={12} className="text-brand-500" />
+                <span className="text-[10px] font-semibold text-brand-600">Savings: $0</span>
+              </div>
+              <div className="text-right" id="federal-refund-display">
+                <p className="text-[9px] sm:text-[10px] font-medium text-gray-400 uppercase tracking-wider">Federal</p>
+                <p className="text-sm sm:text-lg font-bold text-gray-900">$0.00</p>
+              </div>
+              <div className="w-px h-6 sm:h-8 bg-gray-200" />
+              <div className="text-right" id="state-refund-display">
+                <p className="text-[9px] sm:text-[10px] font-medium text-gray-400 uppercase tracking-wider">State</p>
+                <p className="text-sm sm:text-lg font-bold text-gray-900">$0.00</p>
+              </div>
             </div>
           </div>
         </div>
