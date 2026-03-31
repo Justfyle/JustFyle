@@ -87,8 +87,8 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
       transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
     })
 
-    let newTooltipStyle = {}
-    let newArrowDirection = 'left'
+    let newTooltipStyle: React.CSSProperties = {}
+    let newArrowDirection: 'left' | 'right' | 'top' | 'bottom' = 'left'
 
     switch (step.position) {
       case 'right':
@@ -144,7 +144,7 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
   }
 
   const handleComplete = () => {
-    try { localStorage.setItem('justfyle_onboarding_complete', 'true') } catch (e) {}
+    try { localStorage.setItem('justfyle_onboarding_complete', 'true') } catch (e) { /* noop */ }
     onComplete()
   }
 
@@ -157,6 +157,7 @@ export default function OnboardingTutorial({ onComplete }: { onComplete: () => v
       case 'right': return (<svg width="8" height="16" viewBox="0 0 8 16" style={arrowStyle}><path d="M0 0L8 8L0 16Z" fill={color} /></svg>)
       case 'top': return (<svg width="16" height="8" viewBox="0 0 16 8" style={arrowStyle}><path d="M0 8L8 0L16 8Z" fill={color} /></svg>)
       case 'bottom': return (<svg width="16" height="8" viewBox="0 0 16 8" style={arrowStyle}><path d="M0 0L8 8L16 0Z" fill={color} /></svg>)
+      default: return null
     }
   }
 
